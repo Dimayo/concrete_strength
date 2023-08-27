@@ -15,8 +15,8 @@
 ### Methods Used
 * Data preparation
 * Exploratory analysis
-* Data Visualization
-* Machine Learning
+* Data visualization
+* Machine learning
 
 ## Project Description
 <p>As data, two files are given that contain a training and a test sample. The training sample consists of ten columns. The first is the composition identifier (data points), the next eight are independent variables, and the ninth (last) is the target that the model should predict.</p> <p>The test sample consists of nine columns — the same as in the training one, but without the target variable.</p>
