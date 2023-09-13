@@ -1,23 +1,65 @@
-# Concrete strength project
-![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white)
-![Matplotlib](https://img.shields.io/badge/Matplotlib-%23ffffff.svg?style=for-the-badge&logo=Matplotlib&logoColor=black)
-![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white)
+# Прогноз прочности бетона
+https://github.com/Dimayo/concrete_strength_project/blob/main/concrete.ipynb<br>
+Библиотеки python: pandas, seaborn, matplotlib, numpy, sklearn
 
-<p>Here is the link: https://github.com/Dimayo/concrete_strength_project/blob/main/concrete.ipynb</p>
+## Цель проекта
+<p>Целью данного проекта было выявление зависимости прочности бетона от его состава и технологии производства, используя результаты проведенных испытаний. Необходимо было построить модель машинного обучения, реализующую данный подход.</p> <p>Успешное решение подобных задач позволяет существенно снизить затраты и ускорить производство качественного продукта.</p>
 
-#### -- Project Status: [Completed]
+## Что было сделано
+<p>В качестве данных даны два файла, содержащие обучающую и тестовую выборку. Обучающая выборка состоит из десяти столбцов. Первый — это идентификатор состава (точки данных), следующие восемь — независимые переменные, а девятый (последний) — это цель, которую должна предсказать модель.</p> <p>Тестовая выборка состоит из девяти столбцов — такиж же как и в обучающей выборке, но без целевой переменной.</p>
+<p>Решения оцениваются по значению среднеквадратической ошибки.</p>
+Данные были загружены, была произведена проверка данных на пропуски и удаление дубликатов. Далее была произведена проверка зависимости целевой переменной от признаков с помощью метода pairplot библиотеки seaborn, также была проверена информацию о типах данных и описательная статистика датафрейма. Проверены выбросы в признаках:
 
-## Project Objective
-<p>The purpose of this project was to identify the dependence of the strength of concrete on its composition and production technology, using the results of the tests. It was necessary to build a machine learning model that implements this approach.</p> <p>The successful solution of such problems can significantly reduce costs and accelerate the production of a quality product.</p>
+```
+for column in df.columns:
+    plt.figure()
+    sns.boxplot(df[column])
+    plt.title(column)
+```
+Выбросы были заменены граничным значением с помощью функции для рассчета интерквартильного размаха:
+```
+for column in x.columns:
+    x.loc[x[column] > get_outliers(x[column])[1], column] = get_outliers(x[column])[1]
+    x.loc[x[column] < get_outliers(x[column])[0], column] = get_outliers(x[column])[0]
+    x_test.loc[x_test[column] > get_outliers(x[column])[1], column] = get_outliers(x[column])[1]
+    x_test.loc[x_test[column] < get_outliers(x[column])[0], column] = get_outliers(x[column])[0]
+```
+Выборки были стандартизированы:
+```
+scaler = StandardScaler()
+columns = x.columns
+x[columns] = scaler.fit_transform(x[columns])
+x_test[columns] = scaler.transform(x_test[columns])
+```
+Были протестированы различные модели с подбором гиперпараметров с помщью Grid Search:
+```
+params = {
+    'hidden_layer_sizes': [(200,150,100),(500,500,500)],
+    'max_iter': [2000,2500,3000],
+    'activation': ['relu','logistic'],
+    'solver': ['sgd','adam'],
+    'alpha': [1,10],
+    'learning_rate': ['adaptive','constant'],
+}
 
-### Methods Used
-* Data preparation
-* Exploratory analysis
-* Data visualization
-* Machine learning
+gs = GridSearchCV(MLPRegressor(), params, cv=3, scoring='neg_root_mean_squared_error', n_jobs=-1)
+gs.fit(x, y)
 
-## Project Description
-<p>As data, two files are given that contain a training and a test sample. The training sample consists of ten columns. The first is the composition identifier (data points), the next eight are independent variables, and the ninth (last) is the target that the model should predict.</p> <p>The test sample consists of nine columns — the same as in the training one, but without the target variable.</p>
-<p>Solutions are evaluated by the value of the root-mean-square error.</p>
+print('Лучшие параметры для MLPRegressor: ', gs.best_params_)
+print('Лучший результат для MLPRegressor: ', gs.best_score_)
+```
+## Результат
+Лучший результат показала модель многослойного персептрона со среднеквадратическим отклонением 4.9:
+```
+model = MLPRegressor(activation='relu', hidden_layer_sizes=(600, 550, 500), alpha=10,
+                     learning_rate='adaptive', max_iter=2000, solver='sgd')
+model.fit(x, y)
+```
+Создан файл, который будет использоваться для проверки качества модели на тестовой выборке:
+```
+df_submission = pd.DataFrame(data= {
+    'Id': df_test['Id'],
+    'Strength': test_pred
+})
+df_submission.head()
+```
