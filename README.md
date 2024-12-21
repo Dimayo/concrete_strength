@@ -1,5 +1,5 @@
 # Прогноз прочности бетона
-https://github.com/Dimayo/concrete_strength/blob/main/concrete.ipynb<br>
+[Код проекта в jupyter notebook](https://github.com/Dimayo/concrete_strength/blob/main/concrete.ipynb)<br>
 Библиотеки python: pandas, seaborn, matplotlib, numpy, sklearn
 
 ## Цель проекта
